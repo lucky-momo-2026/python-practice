@@ -2,8 +2,8 @@ import csv
 
 total = 0
 count = 0
-max_score = float('-inf')　　#全員がゼロでもおかしくないように
-min_score = float('inf')　　#最高点がいくつか１００点満点とは限らないから
+max_score = float('-inf') #全員がゼロでもおかしくないように
+min_score = float('inf')  #最高点がいくつか１００点満点とは限らないから
 max_name = ""
 min_name = ""
 
