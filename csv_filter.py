@@ -2,34 +2,38 @@ import csv
 
 total = 0
 count = 0
-max_score = 0
-min_score = 100
+max_score = float('-inf')　　#全員がゼロでもおかしくないように
+min_score = float('inf')　　#最高点がいくつか１００点満点とは限らないから
+max_name = ""
+min_name = ""
 
-with open("data.csv", "r", encoding="utf-8") as f:
+#見やすいようにｆとｆ２を統一
+with open("data.csv", "r", encoding="utf-8") as f, \
+	 open("pass.csv", "w", encoding="utf-8", newline="")as f2:
+
 	reader = csv.reader(f)
-	next(reader)
+	writer = csv.writer(f2)
 
-	with open("pass.csv", "w", encoding="utf-8", newline="")as f2:
-		writer = csv.writer(f2)
+	header = next(reader)  #ヘッダー飛ばす
+	writer.writerow(header)  #ヘッダーを出力ファイルにも書く
 
-		for row in reader:
-			name = row[0]
-			score = int(row[1])
+	for row in reader:
+		name = row[0]
+		score = int(row[1])
 
-			if score >=60:
-				writer.writerow([name,score])
-				print([name,score])
-				total += score
-				count += 1
+		if score >=60:
+			writer.writerow([name,score])
+			print([name,score])
+			total += score
+			count += 1
 
+		if score > max_score:
+			max_score = score
+			max_name =  name
 
-			if score > max_score:
-				max_score = score
-				max_name =  name
-
-			if score < min_score:
-				min_score = score
-				min_name = name
+		if score < min_score:
+			min_score = score
+			min_name = name
 if count > 0:
 	print("平均：", total/ count)
 	print("最高点：", max_score, max_name)
