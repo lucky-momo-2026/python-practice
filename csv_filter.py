@@ -18,11 +18,11 @@ with open("data.csv", "r", encoding="utf-8") as f, \
 	writer.writerow(header)  #ヘッダーを出力ファイルにも書く
 
 	for row in reader:
-		name = row[0]
+		name = row[0].capitalize()
 		score = int(row[1])
 
 		if score >=60:
-			writer.writerow([name,score])
+			writer.writerow([name,score])  #.capitalize()は一文字目を大文字それ以降小文字
 			print([name,score])
 			total += score
 			count += 1
