@@ -4,13 +4,13 @@ INPUT_FILE = "data.csv"  #大文字は変わらない値・読み込むファイ
 OUTPUT_FILE = "pass.csv"  #小文字は変数（ループの中で変わる値）・書き出すファイルを変えるだけで使える
 PASS_SCORE = 60 #ここを変えるだけで合格点が変わる
 
-def load_and_filter(input_filter, output_file, pass_score):
+def load_and_filter(input_file, output_file, pass_score):
     '''CSVを読み込んで(input_file)合格点以上の者(pass_score)を合格者を書き出しす(output_file)'''
 
     pass_rows = []  #合格者を入れる空のリスト
 #withはdefの中に入るから段落を下げる
-    with open("data.csv", "r", encoding="utf-8") as f, \
-         open("pass.csv", "w", encoding="utf-8", newline="")as f2:
+    with open(input_file, "r", encoding="utf-8") as f, \
+         open(output_file, "w", encoding="utf-8", newline="")as f2:
 
         reader = csv.reader(f)
         writer = csv.writer(f2)
@@ -24,8 +24,8 @@ def load_and_filter(input_filter, output_file, pass_score):
 
             if score >= pass_score:
                 writer.writerow([name,score])  #[]は後から変更できる/CSVに書き出すwriterowは[]で渡す
-            pass_rows.append((name, score))  #()は後から変更できない/ここでは一度入れたデータは変更する必要がない
-        return pass_rows  #合格者をmain()に渡す
+                pass_rows.append((name, score))  #()は後から変更できない/ここでは一度入れたデータは変更する必要がない
+    return pass_rows  #合格者をmain()に渡す
              
 def calc_stats(rows):  #rowsは複数
     '''合格者のリストから平均・最高・採点を計算する'''
