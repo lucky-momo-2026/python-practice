@@ -44,7 +44,21 @@ def calc_stats(rows):  #rowsは複数
         "max":(max_name, max_score),
         "min":(min_name, min_score),
     }
+def save_stats(pass_stats, all_stats, output_file="result.csv"):
+    '''統計結果をCSVファイルに書く'''
+    with open(output_file, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["項目", "値", "氏名"])  #ヘッダー
 
+        if pass_stats:
+            writer.writerow(["合格者平均点", f'{pass_stats["avg"]:.1f}', ""])  #:1fは小数点１桁で表示する　""は平均に氏名はつかないので空欄
+            writer.writerow(["合格者最高点", pass_stats["max"][1], pass_stats["max"][0]])
+            writer.writerow(["合格者最低点", pass_stats["min"][1], pass_stats["min"][0]])
+        else:
+            writer.writerow(["合格者", "データなし", ""])
+
+        if all_stats:
+            writer.writerow(["全受験者最低点", all_stats["min"][1], all_stats["min"][0]])
 def main():
     '''load_and_filter()で合格者を呼びだしpass_rowsで受け取って統計を表示する'''
     pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, PASS_SCORE)  #合格者と全員のリストを同時に出す
@@ -65,4 +79,6 @@ def main():
     all_stats = calc_stats(all_rows)  #全員の統計
     if all_stats:
             print(f'全受験者の最低点:{all_stats["min"][1]}点 {all_stats["min"][0]}')
+    save_stats(stats, all_stats)
+    print("result.csvに統計を書き出しました")
 main()  #main()を呼び出してプログラムスタート
