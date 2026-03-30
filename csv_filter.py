@@ -8,6 +8,7 @@ def load_and_filter(input_file, output_file, pass_score):
     '''CSVを読み込んで(input_file)合格点以上の者(pass_score)を合格者を書き出しす(output_file)'''
 
     pass_rows = []  #合格者を入れる空のリスト
+    all_rows = []  #全員を入れる空のリスト（全員の中から最低点を出すために）
 #withはdefの中に入るから段落を下げる
     with open(input_file, "r", encoding="utf-8") as f, \
          open(output_file, "w", encoding="utf-8", newline="")as f2:
@@ -21,11 +22,12 @@ def load_and_filter(input_file, output_file, pass_score):
         for row in reader:  #rowは一人分のデータ
             name = row[0].capitalize() #.capitalize()は一文字目を大文字それ以降小文字
             score = int(row[1])  #CSVからとった文字を計算できる数字に変換
+            all_rows.append((name, score))
 
-            if score >= pass_score:
+            if score >= pass_score:  #スコアがパススコアより低かったら
                 writer.writerow([name,score])  #[]は後から変更できる/CSVに書き出すwriterowは[]で渡す
                 pass_rows.append((name, score))  #()は後から変更できない/ここでは一度入れたデータは変更する必要がない
-    return pass_rows  #合格者をmain()に渡す
+    return pass_rows, all_rows  #合格者をmain()に渡す
              
 def calc_stats(rows):  #rowsは複数
     '''合格者のリストから平均・最高・採点を計算する'''
@@ -45,7 +47,7 @@ def calc_stats(rows):  #rowsは複数
 
 def main():
     '''load_and_filter()で合格者を呼びだしpass_rowsで受け取って統計を表示する'''
-    pass_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, PASS_SCORE)
+    pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, PASS_SCORE)  #合格者と全員のリストを同時に出す
 
     print("---合格者---")
     for name, score in pass_rows:  #pass_rowから１人ぶんずつ取り出して表示
@@ -59,5 +61,8 @@ def main():
         print(f'最低点：{stats["min"][1]}点 {stats["min"][0]}')
     else:
         print("平均： データなし")
-
+    
+    all_stats = calc_stats(all_rows)  #全員の統計
+    if all_stats:
+            print(f'全受験者の最低点:{all_stats["min"][1]}点 {all_stats["min"][0]}')
 main()  #main()を呼び出してプログラムスタート
