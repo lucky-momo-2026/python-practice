@@ -1,4 +1,5 @@
 import csv
+import sys
 
 INPUT_FILE = "data.csv"  #大文字は変わらない値・読み込むファイルを変えるだけでつかえる
 OUTPUT_FILE = "pass.csv"  #小文字は変数（ループの中で変わる値）・書き出すファイルを変えるだけで使える
@@ -60,8 +61,13 @@ def save_stats(pass_stats, all_stats, output_file="result.csv"):
         if all_stats:
             writer.writerow(["全受験者最低点", all_stats["min"][1], all_stats["min"][0]])
 def main():
-    '''load_and_filter()で合格者を呼びだしpass_rowsで受け取って統計を表示する'''
-    pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, PASS_SCORE)  #合格者と全員のリストを同時に出す
+    '''コマンドラインから合格点を受け取って実行時に数字を指定できる。指定がなければデフォルトの数字（pass_score=60）を使う'''
+    if len(sys.argv) > 1:
+        pass_score = int(sys.argv[1]) #指定の数字を使うという指示
+    else:
+        pass_score = PASS_SCORE #指定がなければデフォルトの数字
+    
+    pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, pass_score)  #合格者と全員のリストを同時に出す
 
     print("---合格者---")
     for name, score in pass_rows:  #pass_rowから１人ぶんずつ取り出して表示
