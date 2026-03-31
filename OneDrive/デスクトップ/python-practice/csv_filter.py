@@ -3,22 +3,26 @@ import sys
 
 INPUT_FILE = "data.csv"  #大文字は変わらない値・読み込むファイルを変えるだけでつかえる
 OUTPUT_FILE = "pass.csv"  #小文字は変数（ループの中で変わる値）・書き出すファイルを変えるだけで使える
+FAIL_FILE = "fail.csv"  #不合格者を書き出すわいファイル
+
 PASS_SCORE = 60 #ここを変えるだけで合格点が変わる
 
-def load_and_filter(input_file, output_file, pass_score):
+def load_and_filter(input_file, output_file, fail_file, pass_score):
     '''CSVを読み込んで(input_file)合格点以上の者(pass_score)を合格者を書き出しす(output_file)'''
 
     pass_rows = []  #合格者を入れる空のリスト
     all_rows = []  #全員を入れる空のリスト（全員の中から最低点を出すために）
 #withはdefの中に入るから段落を下げる
     with open(input_file, "r", encoding="utf-8") as f, \
-         open(output_file, "w", encoding="utf-8", newline="")as f2:
+         open(output_file, "w", encoding="utf-8", newline="")as f2, \
+         open(fail_file, "w", encoding="utf-8", newline="")as f3:  #fail_fileを書き出すために追加
 
         reader = csv.reader(f)
         writer = csv.writer(f2)
 
         header = next(reader)  #ヘッダー飛ばす
-        writer.writerow(header)  #ヘッダーを出力ファイルにも書く
+        writer.writerow(header)  #Pass_csvのヘッダーを出力ファイルにも書く
+        f3.write("name, score\n")  #fail.csvのーヘッダーを書く
 
         for row in reader:  #rowは一人分のデータ
             name = row[0].capitalize() #.capitalize()は一文字目を大文字それ以降小文字
@@ -28,6 +32,8 @@ def load_and_filter(input_file, output_file, pass_score):
             if score >= pass_score:  #スコアがパススコアより低かったら
                 writer.writerow([name,score])  #[]は後から変更できる/CSVに書き出すwriterowは[]で渡す
                 pass_rows.append((name, score))  #()は後から変更できない/ここでは一度入れたデータは変更する必要がない
+            else:
+                f3.write(f"{name},{score}\n")  #不合格者をf3に入れるため追加 \nは改行
     return pass_rows, all_rows  #合格者をmain()に渡す
              
 def calc_stats(rows):  #rowsは複数
@@ -44,6 +50,7 @@ def calc_stats(rows):  #rowsは複数
         "avg": avg,
         "max":(max_name, max_score),
         "min":(min_name, min_score),
+        "count":len(rows),
     }
 def save_stats(pass_stats, all_stats, output_file="result.csv"):
     '''統計結果をCSVファイルに書く'''
@@ -67,24 +74,30 @@ def main():
     else:
         pass_score = PASS_SCORE #指定がなければデフォルトの数字
     
-    pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, pass_score)  #合格者と全員のリストを同時に出す
+    pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, FAIL_FILE, pass_score)  #合格者と全員のリストを同時に出す
 
     print("---合格者---")
     for name, score in pass_rows:  #pass_rowから１人ぶんずつ取り出して表示
         print(f"{name}:{score}点")
 
     stats = calc_stats(pass_rows)  #clac_stats()を呼び出して結果をstatsで受け取る
+    all_stats = calc_stats(all_rows)  #全員の統計
+
     print('----統計----')
     if stats:
+        print(f'受験者数：{all_stats["count"]}人')  #all_statsからcountで人数を計算
+        print(f'合格者数：{stats["count"]}人')  #statsからcountdeで人数計算
         print(f'平均：{stats["avg"]}点')
         print(f'最高点：{stats["max"][1]}点 {stats["max"][0]}')
         print(f'最低点：{stats["min"][1]}点 {stats["min"][0]}')
     else:
         print("平均： データなし")
     
-    all_stats = calc_stats(all_rows)  #全員の統計
     if all_stats:
             print(f'全受験者の最低点:{all_stats["min"][1]}点 {all_stats["min"][0]}')
     save_stats(stats, all_stats)
+
     print("result.csvに統計を書き出しました")
+    print("fail.csvに不合格者を書き出しました")
+
 main()  #main()を呼び出してプログラムスタート
