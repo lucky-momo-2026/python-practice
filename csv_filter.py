@@ -18,11 +18,11 @@ def load_and_filter(input_file, output_file, fail_file, pass_score):
          open(fail_file, "w", encoding="utf-8", newline="")as f3:  #fail_fileを書き出すために追加
 
         reader = csv.DictReader(f) #next(reader)で飛ばす必要がない。DictReaderが１行目を列名として使う
-        writer = csv.DictWeiter(f2, fieldnames=reader.fieldnames)
+        writer = csv.DictWriter(f2, fieldnames=reader.fieldnames)
 
         for row in reader:  #rowは一人分のデータ
-            name = row[0].capitalize() #.capitalize()は一文字目を大文字それ以降小文字
-            score = int(row[1])  #CSVからとった文字を計算できる数字に変換
+            name = row["name"].capitalize() #.capitalize()は一文字目を大文字それ以降小文字
+            score = int(row["score"])  #CSVからとった文字を計算できる数字に変換
             all_rows.append((name, score))
 
             if score >= pass_score:  #スコアがパススコアより低かったら
