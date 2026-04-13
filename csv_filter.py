@@ -56,8 +56,16 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
 
         for row in reader:  #rowは一人分のデータ
             name = row["name"].capitalize() #csv.Dictreaderは列名で読むからrow[0]ではなく["name"]
-            score = int(row["score"])  #CSVからとった文字を計算できる数字に変換
+            score_text = row["score"].strip()  #storip() score列の前後の空白を取り除いてから確認する
             
+            #scoreが数字として変換できるか確認する/int()だとvalueErrorだけが出て原因がわかりにくくなるため
+            try:
+                score = int(score_text)  #確認後に計算できる整数へ変換
+            except ValueError:
+                print(f"エラー：score が数字ではありません name={name}, score={row['score']}")
+                print("対処：data.csv の score列に整数を入れてください")
+                return None, None
+             
             all_rows.append((name, score))
 
             #CSVから読んだ一人分のデータをSQLiteのstudentsテーブルに入れる
@@ -195,6 +203,11 @@ def main():
         pass_score = PASS_SCORE #指定がなければデフォルトの数字
     
     pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, FAIL_FILE, pass_score, cursor)  #合格者と全員のリストを同時に出す/cursorでも出せるようにする
+    
+    # load_and_filterでエラーがあった場合はNoneが返るのでここで止める
+    if pass_rows is None or all_rows is None:
+        conn.close() #DBを開いたままにしないため閉じる
+        return
 
     #テーブル作成をSQLiteに保存する
     conn.commit()
