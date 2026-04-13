@@ -1,19 +1,32 @@
-# 📊 CSV Score Filter
+# 📊 CSV Score Filter（SQLite版）
 
-学生の試験スコアを読み込み、合格者の抽出と統計集計をするPythonスクリプトです。
+学生の試験スコアをCSVから読み込み、  
+**SQLiteを使って合格者の抽出と統計集計を行うPythonスクリプト**です。
 
 ---
 
 ## 💡 できること
 
 - CSVファイルから学生データを読み込む
-- 合格点以上の学生を `pass.csv` に書き出す
-- 合格者の平均・最高・最低点を集計する
-- 全受験者の最低点を集計する
+- SQLiteデータベースにデータを登録する
+- SQL（WHERE句）を使って合格者を抽出する
+- SQLで合格者数・平均・最高・最低点を集計する（COUNT / AVG / MAX / MIN）
+- 合格者を `pass.csv` に書き出す
+- 不合格者を `fail.csv` に書き出す
 - 統計結果を `result.csv` に書き出す
 - 実行時に合格点をコマンドラインから指定できる
-- 不合格者を `fail.csv` に書き出す
-- 受験者数と合格者数を集計する
+
+---
+
+## 🧠 技術ポイント（就職用）
+
+- Pythonの条件分岐（if）ではなく、SQLの `WHERE` 句で合格者抽出を実装
+- 集計処理をPythonからSQLへ移行
+- SQLiteを使ったデータ処理の基本構成を理解
+  - INSERT（データ登録）
+  - SELECT（抽出）
+  - WHERE（条件）
+  - COUNT / AVG / MAX / MIN（集計）
 
 ---
 
@@ -21,10 +34,12 @@
 
 ```
 python-practice/
-├── csv_filter.py   # メインスクリプト
-├── data.csv        # 入力データ（学生名・スコア）
-├── pass.csv        # 出力：合格者一覧
-└── result.csv      # 出力：統計結果
+├── csv_filter.py # メインスクリプト
+├── data.csv # 入力データ（学生名・スコア）
+├── pass.csv # 出力：合格者一覧
+├── fail.csv # 出力：不合格者一覧
+├── result.csv # 出力：統計結果
+└── students.db # SQLiteデータベース
 ```
 
 ---
