@@ -1,6 +1,7 @@
 import csv
 import sys
 import sqlite3  #SQLiteを使うために追加
+import os #ファイルが存在するか確認するために使用（入力ミス防止）
 
 INPUT_FILE = "data.csv"  #実行中に変えない名前は大文字の定数
 OUTPUT_FILE = "pass.csv" 
@@ -28,9 +29,6 @@ PASS_SCORE = 60 #ここを変えるだけで合格点が変わる
 
 
 def create_students_table(cursor):
-    #既存のデータを全部削除する（毎回リセット）
-    cursor.execute("DELETE FROM students")
-
     #受験者データを入れるstudentsテーブルを作る/すでに同じ名前のテーブルがある場合は作り直さずそのまま使う
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS students(
@@ -39,11 +37,13 @@ def create_students_table(cursor):
                    score INTEGER
         )
     """)
-
+    
+    #既存のデータを全部削除する（毎回リセット）テーブル作成後に実行することでエラーを防ぐ
+    cursor.execute("DELETE FROM students")
 
 def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #cursorを追加して使えるようにする
     '''CSVを読み込んで(input_file)合格点以上の者(pass_score)を合格者を書き出す(output_file)'''
-
+    
     pass_rows = []  #合格者を入れる空のリスト
     all_rows = []  #全員を入れる空のリスト（全員の中から最低点を出すために）
 #withはdefの中に入るから段落を下げる
@@ -138,7 +138,6 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
 
     return sql_pass_rows, all_rows  #合格者をmain()に渡す/SQL版に切り替え
 
-
              
 def calc_stats(rows):  #rowsは複数
     '''合格者のリストから平均・最高・採点を計算する'''
@@ -172,15 +171,19 @@ def save_stats(pass_stats, all_stats, output_file="result.csv"):
         if all_stats:
             writer.writerow(["全受験者最低点", all_stats["min"][1], all_stats["min"][0]])
 def main():
+    #処理を開始する前に、指定したCSVファイルが存在するか確認する(事前に検知してわかりやすくするため)
+    if not os.path.exists(INPUT_FILE):
+        print(f"エラー：入力ファイル '{INPUT_FILE}'が見つかりません")
+        print("原因：CSVファイルが存在しない、またはファイル名が違います")
+        print("対処：csv_filter.py と同じフォルダに data.csv を置いてください")
+        return  #これ以上処理を進めない（安全に終了）
+
     #SQLiteデータベースに接続（DB_FILEは上で定義たデータベースの名前）
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
 
     #受験者データを入れるstudentsテーブルを作る
     create_students_table(cursor)
-
-    #テーブル作成をSQLiteに保存する
-    conn.commit()
 
     #SQLiteへの接続が成功したか確認するために表示する
     print("SQLiteデータベースに接続しました")
@@ -192,6 +195,10 @@ def main():
         pass_score = PASS_SCORE #指定がなければデフォルトの数字
     
     pass_rows, all_rows = load_and_filter(INPUT_FILE, OUTPUT_FILE, FAIL_FILE, pass_score, cursor)  #合格者と全員のリストを同時に出す/cursorでも出せるようにする
+
+    #テーブル作成をSQLiteに保存する
+    conn.commit()
+    conn.close()
 
     print("---合格者---")
     for name, score in pass_rows:  #pass_rowから１人ぶんずつ取り出して表示
