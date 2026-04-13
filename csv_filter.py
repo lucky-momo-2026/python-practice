@@ -77,12 +77,48 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
 
     sql_pass_rows = cursor.fetchall()  #SQLで取得した合格者一覧
 
+    #SQLで合格者数を取得する
+    cursor.execute(
+        "SELECT COUNT(*) FROM students WHERE score >= ?",
+        (pass_score,)
+    )
+    sql_pass_count = cursor.fetchone()[0]  #件数は１つだけ返るので[0] で取り出す
+
+    #SQLで合格者平均点を出す
+    cursor.execute(
+        "SELECT AVG(score) FROM students WHERE score >= ?",
+        (pass_score,)
+    )
+    sql_pass_avg = cursor.fetchone()[0]  #平均点を１つ取り出す
+
+    #SQLで合格者の最高点を取得する
+    cursor.execute(
+        "SELECT MAX(score) FROM students WHERE score >= ?",
+        (pass_score,)
+    )
+    sql_pass_max = cursor.fetchone()[0]  #最高点を１つ取り出す
+
+    #SQLで合格者の最低点を取得する
+    cursor.execute(
+        "SELECT MIN(score) FROM students WHERE score >= ?",
+        (pass_score,)
+    )
+    sql_pass_min =cursor.fetchone()[0]  #最低点を１つ取り出す
+
     #SQLで取得した合格者を確認表示する(これでPythonとSQLで確認できる)
     print("===SQLで取得した合格者===")
     for name, score in sql_pass_rows:
         print(f"{name}:{score}点")
 
+    #SQLで取得した合格者数を確認表示
+    print(f"SQL合格者数：{sql_pass_count}人")
+    print(f"SQL合格者平均点：{sql_pass_avg:.1f}点")  #.1fが小数点１桁表示
+    print(f"SQL合格者最高点：{sql_pass_max}点")
+    print(f"SQL合格者最低点：{sql_pass_min}点") 
+
     return sql_pass_rows, all_rows  #合格者をmain()に渡す/SQL版に切り替え
+
+
              
 def calc_stats(rows):  #rowsは複数
     '''合格者のリストから平均・最高・採点を計算する'''
