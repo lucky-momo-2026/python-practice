@@ -5,8 +5,26 @@ import sqlite3  #SQLiteを使うために追加
 INPUT_FILE = "data.csv"  #実行中に変えない名前は大文字の定数
 OUTPUT_FILE = "pass.csv" 
 FAIL_FILE = "fail.csv"  #不合格者を書き出すわいファイル
+DB_FILE = "sutudents.db" #SQLiteで使うデータベースファイル名
 
 PASS_SCORE = 60 #ここを変えるだけで合格点が変わる
+
+def steup_database(db_file):
+    """SQLiteに接続し、学生データを入れるテーブルを作る"""
+    conn = sqlite3.connect(db_file)  #students.dbに接続。なければ自動で作る
+    cursor = conn.cursor()
+
+    #sutdentsテーブルを作る　id:連番　name:名前 score:点数
+    cursor.execute("""
+        CREATE TABLE IF NOT ESISTS students(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                   scor INTEGER
+        )
+    """)
+
+    conn.commit()  #テーブル作成を保存
+    conn.close()  #接続を閉じる
 
 def load_and_filter(input_file, output_file, fail_file, pass_score):
     '''CSVを読み込んで(input_file)合格点以上の者(pass_score)を合格者を書き出す(output_file)'''
@@ -18,19 +36,12 @@ def load_and_filter(input_file, output_file, fail_file, pass_score):
          open(output_file, "w", encoding="utf-8", newline="")as f2, \
          open(fail_file, "w", encoding="utf-8", newline="")as f3:  #fail_fileを書き出すために追加
 
-<<<<<<< HEAD
-        reader = csv.DictReader(f) #next(reader)で飛ばす必要がない。DictReaderが１行目を列名として使う
-        writer = csv.DictWriter(f2, fieldnames=reader.fieldnames)
-
-        for row in reader:  #rowは一人分のデータ
-            name = row["name"].capitalize() #.capitalize()は一文字目を大文字それ以降小文字
-=======
         reader = csv.DictReader(f, skipinitialspace=True) #skipinitialspace=True　空白があっても書いてる文字で読めるようになる
         writer = csv.DictWriter(f2, fieldnames=reader.fieldnames)
 
         for row in reader:  #rowは一人分のデータ
             name = row["name"].capitalize() #csv.Dictreaderは列名で読むからrow[0]ではなく["name"]
->>>>>>> ab07412 (DictReader/DictWriter修正でCSV処理復旧)
+
             score = int(row["score"])  #CSVからとった文字を計算できる数字に変換
             all_rows.append((name, score))
 
@@ -73,15 +84,16 @@ def save_stats(pass_stats, all_stats, output_file="result.csv"):
         if all_stats:
             writer.writerow(["全受験者最低点", all_stats["min"][1], all_stats["min"][0]])
 def main():
-    #SQLiteデータベースに接続（なければ自動で作られる）
-    conn = sqlite3.connect("data.db")
+    #SQLiteデータベースに接続（DB_FILEは上で定義たデータベースの名前）
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
-    print("DB接続Ok")  #確認用
+
+    #SQLiteへの接続が成功したか確認するために表示する
+    print("SQLiteデータベースに接続しました")
 
     '''コマンドラインから合格点を受け取って実行時に数字を指定できる。指定がなければデフォルトの数字（pass_score=60）を使う'''
-    if len(sys.argv) > 1:
-        #pass_score = int(sys.argv[1]) #指定の数字を使うという指示
-        pass_score = 60 #エラー回避。とりあえず固定の合格ラインを付ける。後で上に戻す。
+    if len(sys.argv) > 1:   #pass_score = int(sys.argv[1]) #指定の数字を使うという指示   
+        pass_score = int(sys.argv[1])  #実行時に入力した数字を合格点として使う
     else:
         pass_score = PASS_SCORE #指定がなければデフォルトの数字
     
