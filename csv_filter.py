@@ -28,6 +28,9 @@ PASS_SCORE = 60 #ここを変えるだけで合格点が変わる
 
 
 def create_students_table(cursor):
+    #既存のデータを全部削除する（毎回リセット）
+    cursor.execute("DELETE FROM students")
+
     #受験者データを入れるstudentsテーブルを作る/すでに同じ名前のテーブルがある場合は作り直さずそのまま使う
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS students(
@@ -62,12 +65,6 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
                 "INSERT INTO students (name, score) values (?, ?)",
                 (name, score)
             )
-
-            if score >= pass_score:  #スコアがパススコアより低かったら
-                writer.writerow({"name": name,"score":score})  #skipinitialspaceを入れたので"name"の列はname,"score"の列はscoreに変更,[]はリストなのでエラー表示でる
-                pass_rows.append((name, score))  #()は後から変更できない/ここでは一度入れたデータは変更する必要がない
-            else:
-                f3.write(f"{name},{score}\n")  #不合格者をf3に入れるため追加 \nは改行
    
    #SQLを使って合格者を取得する(scoreが合格点以上)
     cursor.execute(
@@ -93,17 +90,39 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
 
     #SQLで合格者の最高点を取得する
     cursor.execute(
-        "SELECT MAX(score) FROM students WHERE score >= ?",
+        """
+        SELECT name, score
+        FROM students
+        WHERE score = (
+            SELECT MAX(score) FROM students WHERE score >= ?
+        )
+        """,
         (pass_score,)
     )
-    sql_pass_max = cursor.fetchone()[0]  #最高点を１つ取り出す
+    sql_max_person = cursor.fetchone()  #一人分の(name,score)
 
     #SQLで合格者の最低点を取得する
     cursor.execute(
-        "SELECT MIN(score) FROM students WHERE score >= ?",
+        """
+        SELECT name, score
+        FROM students
+        WHERE score = (
+            SELECT MIN(score) FROM students WHERE score >= ?
+        )
+        """,
         (pass_score,)
     )
-    sql_pass_min =cursor.fetchone()[0]  #最低点を１つ取り出す
+    sql_min_person =cursor.fetchone()  #一人分の(name,score)取り出す
+
+    #SQLで「最低得点を取った人の名前と点数」を取得する
+    cursor.execute(
+        """
+        SELECT name,score
+        FROM students
+        WHERE score = (SELECT MIN(score) FROM students)
+        """
+    )
+    sql_all_min_person = cursor.fetchone()  #一人分取得(name,score)
 
     #SQLで取得した合格者を確認表示する(これでPythonとSQLで確認できる)
     print("===SQLで取得した合格者===")
@@ -113,8 +132,9 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
     #SQLで取得した合格者数を確認表示
     print(f"SQL合格者数：{sql_pass_count}人")
     print(f"SQL合格者平均点：{sql_pass_avg:.1f}点")  #.1fが小数点１桁表示
-    print(f"SQL合格者最高点：{sql_pass_max}点")
-    print(f"SQL合格者最低点：{sql_pass_min}点") 
+    print(f"SQL合格者最高点：{sql_max_person[1]}点 {sql_max_person[0]}")
+    print(f"SQL合格者最低点：{sql_min_person[1]}点 {sql_min_person[0]}") 
+    print(f"SQL全受験者最低点：{sql_all_min_person[1]}点 {sql_all_min_person[0]}")
 
     return sql_pass_rows, all_rows  #合格者をmain()に渡す/SQL版に切り替え
 
