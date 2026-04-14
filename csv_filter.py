@@ -6,27 +6,9 @@ import os #ファイルが存在するか確認するために使用（入力ミ
 INPUT_FILE = "data.csv"  #実行中に変えない名前は大文字の定数
 OUTPUT_FILE = "pass.csv" 
 FAIL_FILE = "fail.csv"  #不合格者を書き出すわいファイル
-DB_FILE = "sutudents.db" #SQLiteで使うデータベースファイル名
+DB_FILE = "students.db" #SQLiteで使うデータベースファイル名
 
 PASS_SCORE = 60 #ここを変えるだけで合格点が変わる
-
-# ===== 旧実装（接続とテーブル作成を1つにまとめていた）=====
-# 今は役割を分ける設計に変更したため未使用
-# 理由：処理の流れ（接続→テーブル→INSERT→SELECT）を分かりやすくするため
-#def steup_database(db_file):
-#    """SQLiteに接続し、学生データを入れるテーブルを作る"""
-#    conn = sqlite3.connect(db_file)  #students.dbに接続。なければ自動で作る
-#   cursor = conn.cursor()
-#    cursor.execute("""
-#        CREATE TABLE IF NOT EXISTS students (
-#            id INTEGER PRIMARY KEY AUTOINCREMENT,
-#            name TEXT,
-#            score INTEGER
-#        )
-#    """)
-#    conn.commit()  #テーブル作成を保存
-#    conn.close()  #接続を閉じる
-
 
 def create_students_table(cursor):
     #受験者データを入れるstudentsテーブルを作る/すでに同じ名前のテーブルがある場合は作り直さずそのまま使う
