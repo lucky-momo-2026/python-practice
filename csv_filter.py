@@ -73,6 +73,12 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
                 "INSERT INTO students (name, score) values (?, ?)",
                 (name, score)
             )
+
+        #CVSデータに１件もない時は、この先のSQL集計を止める機能
+        if not all_rows:
+            print("エラー：data.csv に受験者データがありません")
+            print("対策：ヘッダーだけでなく name と score のデータを１件以上入力してください")
+            return None, FileNotFoundError
    
    #SQLを使って合格者を取得する(scoreが合格点以上)
     cursor.execute(
@@ -125,7 +131,17 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
     #SQLで「最低得点を取った人の名前と点数」を取得する
     cursor.execute(
         """
-        SELECT name,score
+        SELECT name, score
+        From students
+        WHERE score = (SELECT MAX(score) FROM students)
+    """
+    )
+    sql_all_max_person = cursor.fetchone()  #一人分取得（name,score)
+
+    #SQLで「最低得点を取った人の名前と点数」を取得する
+    cursor.execute(
+        """
+        SELECT name, score
         FROM students
         WHERE score = (SELECT MIN(score) FROM students)
         """
@@ -139,9 +155,23 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
 
     #SQLで取得した合格者数を確認表示
     print(f"SQL合格者数：{sql_pass_count}人")
-    print(f"SQL合格者平均点：{sql_pass_avg:.1f}点")  #.1fが小数点１桁表示
-    print(f"SQL合格者最高点：{sql_max_person[1]}点 {sql_max_person[0]}")
-    print(f"SQL合格者最低点：{sql_min_person[1]}点 {sql_min_person[0]}") 
+
+    #spl_pass_countを見て合格者が０かどうかを判定
+    if sql_pass_count == 0:
+        print("SQL合格者平均点：対象なし")
+    else:
+        print(f"SQL合格者平均点：{sql_pass_avg:.1f}点")  #.1fが小数点１桁表示
+    
+    #spl_pass_countを見て合格者の最高/最低得点があるかどうかを判定
+    if sql_pass_count == 0:
+        print("SQL合格者最高点：対象なし")
+        print("SQL合格者最低点：対象なし")
+    else:
+        print(f"SQL合格者最高点：{sql_max_person[1]}点 {sql_max_person[0]}")
+        print(f"SQL合格者最低点：{sql_min_person[1]}点 {sql_min_person[0]}") 
+    
+    #一人いる前提なので必ず結果が返るのでIF文にする必要はない。
+    print(f"SQL全受験者最高点：{sql_all_max_person[1]}点 {sql_all_max_person[0]}")
     print(f"SQL全受験者最低点：{sql_all_min_person[1]}点 {sql_all_min_person[0]}")
 
     return sql_pass_rows, all_rows  #合格者をmain()に渡す/SQL版に切り替え
@@ -221,17 +251,23 @@ def main():
     all_stats = calc_stats(all_rows)  #全員の統計
 
     print('----統計----')
-    if stats:
-        print(f'受験者数：{all_stats["count"]}人')  #all_statsからcountで人数を計算
-        print(f'合格者数：{stats["count"]}人')  #statsからcountdeで人数計算
-        print(f'平均：{stats["avg"]}点')
-        print(f'最高点：{stats["max"][1]}点 {stats["max"][0]}')
-        print(f'最低点：{stats["min"][1]}点 {stats["min"][0]}')
-    else:
-        print("平均： データなし")
+    #if文から出すことで、合格者が0でも受験者数は必ず出るようにする。
+    print(f"受験者数：{all_stats["count"]}人")  #all_statsからcountで人数を計算
     
+    if stats:
+        print(f"合格者数：{stats["count"]}人")  #statsからcountdeで人数計算
+        print(f"平均：{stats["avg"]}点")
+        print(f"合格最高点：{stats["max"][1]}点 {stats["max"][0]}")
+        print(f"合格最低点：{stats["min"][1]}点 {stats["min"][0]}")
+    else:  #合格者0人の時統計が空欄にならない対策。
+        print("合格者数：0人")
+        print("平均：対象者なし")
+        print("合格最高点：対象なし")
+        print("合格最低点：対象なし")
+
     if all_stats:
-            print(f'全受験者の最低点:{all_stats["min"][1]}点 {all_stats["min"][0]}')
+            print(f"全受験者最高点：{all_stats["max"][1]}点 {all_stats["max"][0]}")
+            print(f"全受験者最低点：{all_stats["min"][1]}点 {all_stats["min"][0]}")
     save_stats(stats, all_stats)
 
     print("result.csvに統計を書き出しました")
