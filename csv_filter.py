@@ -149,12 +149,16 @@ def load_and_filter(input_file, output_file, fail_file, pass_score, cursor):  #c
     sql_all_min_person = cursor.fetchone()  #一人分取得(name,score)
 
     #SQLで取得した合格者を確認表示する(これでPythonとSQLで確認できる)
-    print("===SQLで取得した合格者===")
+    print("【SQLで集計結果】")
     for name, score in sql_pass_rows:
         print(f"{name}:{score}点")
 
     #SQLで取得した合格者数を確認表示
     print(f"SQL合格者数：{sql_pass_count}人")
+
+    #SQLで取得した不合格者数を確認表示
+    sql_fail_count = len(all_rows) - sql_pass_count  #len(all_rows)でcvsから全受験者の人数を出してaql_pass_countで引く
+    print(f"SQL不合格者数：{sql_pass_count}人")
 
     #spl_pass_countを見て合格者が０かどうかを判定
     if sql_pass_count == 0:
@@ -243,24 +247,33 @@ def main():
     conn.commit()
     conn.close()
 
-    print("---合格者---")
+    print("【合格者一覧】")
     for name, score in pass_rows:  #pass_rowから１人ぶんずつ取り出して表示
         print(f"{name}:{score}点")
 
     stats = calc_stats(pass_rows)  #calc_stats()を呼び出して結果をstatsで受け取る
     all_stats = calc_stats(all_rows)  #全員の統計
 
-    print('----統計----')
+    print("【統計情報】")
     #if文から出すことで、合格者が0でも受験者数は必ず出るようにする。
     print(f"受験者数：{all_stats["count"]}人")  #all_statsからcountで人数を計算
     
-    if stats:
+    #合格者数
+    if stats:  #合格者数の後に不合格者数を取り出したいので、ifを分ける
         print(f"合格者数：{stats["count"]}人")  #statsからcountdeで人数計算
+    else:
+        print("合格者数：0人")
+    
+    #不合格者数
+    fail_count = all_stats["count"] - (stats["count"] if stats else 0)
+    print(f"不合格者数：{fail_count}人")
+    
+    #統計
+    if stats:
         print(f"平均：{stats["avg"]}点")
         print(f"合格最高点：{stats["max"][1]}点 {stats["max"][0]}")
         print(f"合格最低点：{stats["min"][1]}点 {stats["min"][0]}")
     else:  #合格者0人の時統計が空欄にならない対策。
-        print("合格者数：0人")
         print("平均：対象者なし")
         print("合格最高点：対象なし")
         print("合格最低点：対象なし")
